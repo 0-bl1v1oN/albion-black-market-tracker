@@ -17,7 +17,6 @@ interface ControlsProps {
   onSortChange: (value: SortOption) => void;
   onResetFilters: () => void;
   onAddNew: () => void;
-  onResetMockData: () => void;
 }
 
 export const Controls = ({
@@ -33,7 +32,6 @@ export const Controls = ({
   onSortChange,
   onResetFilters,
   onAddNew,
-  onResetMockData,
 }: ControlsProps) => {
   return (
     <section className="controls-panel" aria-label="Панель управления">
@@ -48,22 +46,22 @@ export const Controls = ({
       </label>
 
       <label className="field">
-        <span>Зачар</span>
-        <select value={enchantFilter} onChange={(event) => onEnchantChange(event.target.value === 'Все' ? 'Все' : (Number(event.target.value) as EnchantFilter))}>
-          {enchants.map((enchant) => (
-            <option key={enchant} value={enchant}>
-              {enchant === 'Все' ? 'Все' : `.${enchant}`}
+        <span>Тир</span>
+        <select value={tierFilter} onChange={(event) => onTierChange(event.target.value === 'Все' ? 'Все' : (Number(event.target.value) as TierFilter))}>
+          {tiers.map((tier) => (
+            <option key={tier} value={tier}>
+              {tier === 'Все' ? 'Все' : `T${tier}`}
             </option>
           ))}
         </select>
       </label>
 
       <label className="field">
-        <span>Тир</span>
-        <select value={tierFilter} onChange={(event) => onTierChange(event.target.value === 'Все' ? 'Все' : (Number(event.target.value) as TierFilter))}>
-          {tiers.map((tier) => (
-            <option key={tier} value={tier}>
-              {tier === 'Все' ? 'Все' : `T${tier}`}
+        <span>Зачар</span>
+        <select value={enchantFilter} onChange={(event) => onEnchantChange(event.target.value === 'Все' ? 'Все' : (Number(event.target.value) as EnchantFilter))}>
+          {enchants.map((enchant) => (
+            <option key={enchant} value={enchant}>
+              {enchant === 'Все' ? 'Все' : `.${enchant}`}
             </option>
           ))}
         </select>
@@ -93,13 +91,10 @@ export const Controls = ({
 
       <div className="controls-actions">
         <button className="button button-secondary" type="button" onClick={onResetFilters}>
-          Сбросить фильтры
+          Сброс
         </button>
         <button className="button button-primary" type="button" onClick={onAddNew}>
           Добавить предмет
-        </button>
-        <button className="button button-secondary" type="button" onClick={onResetMockData}>
-          Сбросить моковые данные
         </button>
       </div>
     </section>

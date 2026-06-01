@@ -17,12 +17,13 @@ const initialFormValues: ItemFormValues = {
 
 interface ItemModalProps {
   isOpen: boolean;
+  modalMode: 'create' | 'edit';
   editingItem: MarketItem | null;
   onSave: (values: ItemFormValues) => void;
   onClose: () => void;
 }
 
-export const ItemModal = ({ isOpen, editingItem, onSave, onClose }: ItemModalProps) => {
+export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: ItemModalProps) => {
   const [formValues, setFormValues] = useState<ItemFormValues>(initialFormValues);
   const [buyPriceInput, setBuyPriceInput] = useState('');
   const [sellPriceInput, setSellPriceInput] = useState('');
@@ -137,7 +138,7 @@ export const ItemModal = ({ isOpen, editingItem, onSave, onClose }: ItemModalPro
       <section className="form-card modal-card" aria-label="Форма предмета" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
         <div className="form-heading">
           <p className="eyebrow">Запись рынка</p>
-          <h2>{editingItem ? 'Редактировать предмет' : 'Добавить предмет'}</h2>
+          <h2>{modalMode === 'edit' ? 'Редактировать предмет' : 'Добавить предмет'}</h2>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
@@ -190,25 +191,27 @@ export const ItemModal = ({ isOpen, editingItem, onSave, onClose }: ItemModalPro
             </label>
           </div>
 
-          <label className="field">
-            <span>Категория</span>
-            <select value={formValues.category} onChange={(event) => updateField('category', event.target.value as ItemCategory)}>
-              {itemCategories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="form-row">
+            <label className="field">
+              <span>Категория</span>
+              <select value={formValues.category} onChange={(event) => updateField('category', event.target.value as ItemCategory)}>
+                {itemCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
 
           <label className="field">
-            <span>Кто обновил</span>
-            <input value={formValues.updatedBy} onChange={(event) => updateField('updatedBy', event.target.value)} placeholder="Макс" />
-          </label>
+              <span>Кто обновил</span>
+              <input value={formValues.updatedBy} onChange={(event) => updateField('updatedBy', event.target.value)} placeholder="Макс" />
+            </label>
+          </div>
 
           <label className="field">
             <span>Комментарий</span>
-            <textarea value={formValues.comment} onChange={(event) => updateField('comment', event.target.value)} rows={4} placeholder="Заметки по закупке" />
+            <textarea value={formValues.comment} onChange={(event) => updateField('comment', event.target.value)} rows={3} placeholder="Заметки по закупке" />
           </label>
 
           <div className="preview-card">

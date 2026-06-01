@@ -31,8 +31,7 @@ npm run build
 
 ## Как потом заменить localStorage на Google Apps Script API
 
-Сейчас доступ к хранилищу изолирован в `src/utils/storage.ts`. Позже можно заменить функции `loadItems`, `saveItems` и `resetItems` на запросы `fetch` к опубликованному Google Apps Script Web App:
+Сейчас доступ к хранилищу изолирован в `src/utils/storage.ts`. Позже можно заменить функции `loadItems` и `saveItems` на запросы `fetch` к опубликованному Google Apps Script Web App:
 
 - `loadItems()` → `GET` запрос к Apps Script;
-- `saveItems(items)` → `POST` запрос с JSON-массивом предметов;
-- `resetItems()` → либо локальный сброс моков, либо отдельный endpoint в Apps Script.
+`saveItems(items)` → `POST` запрос с JSON-массивом предметов.

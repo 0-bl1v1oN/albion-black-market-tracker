@@ -172,15 +172,15 @@ h2 {
 .controls-panel {
   display: grid;
   grid-template-columns: minmax(200px, 1.3fr) repeat(3, minmax(110px, 0.55fr)) minmax(210px, 0.9fr) auto;
-  gap: 14px;
+  gap: 12px;
   align-items: end;
-  padding: 18px;
+  padding: 16px;
   margin-bottom: 22px;
 }
 
 .field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 input,
@@ -188,11 +188,11 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   outline: none;
   background: #121418;
   color: var(--text);
-  padding: 12px 14px;
+  padding: 10px 12px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -215,16 +215,26 @@ textarea:focus {
 }
 
 .controls-actions {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: end;
 }
 
 .button {
-  min-height: 44px;
+  min-height: 36px;
   border: 0;
-  border-radius: 14px;
-  padding: 0 16px;
+  border-radius: 12px;
+  padding: 0 12px;
   font-weight: 800;
+}
+
+.controls-actions .button {
+  width: nowrap;
+}
+
+.controls-actions .button {
+  min-height: 38px;
+  padding: 0 14px;
 }
 
 .button-primary {
@@ -233,9 +243,15 @@ textarea:focus {
 }
 
 .button-secondary {
-  border: 1px solid rgba(216, 173, 85, 0.35);
-  background: rgba(216, 173, 85, 0.08);
-  color: var(--gold-bright);
+  border: 1px solid rgba(216, 173, 85, 0.28);
+  background: rgba(216, 173, 85, 0.06);
+  color: #e5c57b;
+}
+
+.controls-actions .button-secondary {
+  border-color: rgba(167, 160, 148, 0.26);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
 }
 
 .workspace-grid {
@@ -353,7 +369,7 @@ td small {
 }
 
 .form-card {
-  padding-bottom: 22px;
+  padding-bottom: 16px;
 }
 
 .modal-backdrop {
@@ -367,21 +383,42 @@ td small {
 }
 
 .modal-card {
-  width: min(680px, 100%);
-  max-height: min(92vh, 920px);
+  width: min(740px, 100%);
+  max-height: calc(100vh - 80px);
   overflow-y: auto;
+  scrollbar-color: rgba(216, 173, 85, 0.42) rgba(18, 20, 24, 0.95);
+  scrollbar-width: thin;
+}
+
+.modal-card::-webkit-scrollbar {
+  width: 10px;
+}
+
+.modal-card::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(18, 20, 24, 0.95);
+}
+
+.modal-card::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(18, 20, 24, 0.95);
+  border-radius: 999px;
+  background: rgba(216, 173, 85, 0.42);
+}
+
+.modal-card .form-heading {
+  padding: 18px 20px 0;
 }
 
 .form-card form {
   display: grid;
-  gap: 14px;
-  padding: 16px 22px 0;
+  gap: 10px;
+  padding: 12px 20px 0;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .preview-card {
@@ -389,9 +426,9 @@ td small {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   border: 1px solid var(--border-strong);
-  border-radius: 18px;
+  border-radius: 16px;
   background: linear-gradient(135deg, rgba(216, 173, 85, 0.12), rgba(255, 255, 255, 0.02));
-  padding: 16px;
+  padding: 12px;
 }
 
 .preview-card > span {
@@ -404,15 +441,15 @@ td small {
 }
 
 .preview-card strong {
-  font-size: 1.28rem;
+  font-size: 1.12rem;
 }
 
 .form-error {
   border: 1px solid rgba(248, 113, 113, 0.35);
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(248, 113, 113, 0.1);
   color: #fecaca;
-  padding: 12px 14px;
+  padding: 10px 12px;
   margin-bottom: 0;
 }
 
@@ -493,6 +530,11 @@ td small {
   .modal-backdrop {
     align-items: start;
     padding: 12px;
+  }
+
+  .modal-card {
+    width: min(100%, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
   }
   
   .table-heading span {

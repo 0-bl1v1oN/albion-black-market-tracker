@@ -6,9 +6,10 @@ import { ItemsTable } from './components/ItemsTable';
 import { StatsCards } from './components/StatsCards';
 import type { CategoryFilter, EnchantFilter, ItemFormValues, MarketItem, SortOption, TierFilter } from './types/market';
 import { calculateProfit, calculateRoi } from './utils/calculations';
-import { loadItems, resetItems, saveItems } from './utils/storage';
+import { loadItems, saveItems } from './utils/storage';
 
 const defaultSortOption: SortOption = 'updatedAtDesc';
+type ModalMode = 'create' | 'edit';
 
 const createItemFromForm = (values: ItemFormValues, id?: string): MarketItem => {
   const profit = calculateProfit(values.buyPrice, values.sellPrice);
@@ -26,6 +27,7 @@ const createItemFromForm = (values: ItemFormValues, id?: string): MarketItem => 
 function App() {
   const [items, setItems] = useState<MarketItem[]>(() => loadItems());
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>('create');
   const [editingItem, setEditingItem] = useState<MarketItem | null>(null);
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState<TierFilter>('Все');
@@ -63,11 +65,13 @@ function App() {
   }, [categoryFilter, enchantFilter, items, search, sortOption, tierFilter]);
 
   const handleAddClick = () => {
+    setModalMode('create');
     setEditingItem(null);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (item: MarketItem) => {
+    setModalMode('edit');
     setEditingItem(item);
     setIsModalOpen(true);
   };
@@ -75,16 +79,27 @@ function App() {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setEditingItem(null);
+    setModalMode('create');
+  };
+
+  const createItem = (values: ItemFormValues) => {
+    setItems((currentItems) => [createItemFromForm(values), ...currentItems]);
+  };
+
+  const updateItem = (itemId: string, values: ItemFormValues) => {
+    setItems((currentItems) =>
+      currentItems.map((item) => (item.id === itemId ? createItemFromForm(values, item.id) : item)),
+    );
   };
 
   const handleSaveItem = (values: ItemFormValues) => {
-    if (editingItem) {
-      setItems((currentItems) => currentItems.map((item) => (item.id === editingItem.id ? createItemFromForm(values, item.id) : item)));
+    if (modalMode === 'edit' && editingItem) {
+      updateItem(editingItem.id, values);
     } else {
-      handleModalClose();
+      createItem(values);
     }
 
-    setItems((currentItems) => [createItemFromForm(values), ...currentItems]);
+    handleModalClose();
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -110,17 +125,6 @@ function App() {
     setSortOption(defaultSortOption);
   };
 
-  const handleResetMockData = () => {
-    const isConfirmed = confirm('Сбросить список к начальным моковым данным? Текущие локальные изменения будут удалены.');
-
-    if (!isConfirmed) {
-      return;
-    }
-
-    setItems(resetItems());
-    handleModalClose();
-  };
-
   return (
     <main className="app-shell">
       <Header />
@@ -138,14 +142,19 @@ function App() {
         onSortChange={setSortOption}
         onResetFilters={handleResetFilters}
         onAddNew={handleAddClick}
-        onResetMockData={handleResetMockData}
       />
 
       <div className="workspace-grid">
         <ItemsTable items={visibleItems} onEdit={handleEditClick} onDelete={handleDeleteItem} />
       </div>
 
-      <ItemModal isOpen={isModalOpen} editingItem={editingItem} onSave={handleSaveItem} onClose={handleModalClose} />
+      <ItemModal
+        isOpen={isModalOpen}
+        modalMode={modalMode}
+        editingItem={editingItem}
+        onSave={handleSaveItem}
+        onClose={handleModalClose}
+      />
     </main>
   );
 }

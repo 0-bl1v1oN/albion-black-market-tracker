@@ -20,8 +20,3 @@ export const loadItems = (): MarketItem[] => {
 export const saveItems = (items: MarketItem[]): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 };
-
-export const resetItems = (): MarketItem[] => {
-  saveItems(mockItems);
-  return mockItems;
-};
