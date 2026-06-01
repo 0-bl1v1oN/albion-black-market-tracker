@@ -19,6 +19,7 @@ export interface MarketItem {
 }
 
 export type TierFilter = 'Все' | ItemTier;
+export type EnchantFilter = 'Все' | ItemEnchant;
 export type CategoryFilter = 'Все' | ItemCategory;
 
 export type SortOption =

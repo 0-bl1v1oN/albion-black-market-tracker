@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Controls } from './components/Controls';
 import { Header } from './components/Header';
-import { ItemForm } from './components/ItemForm';
+import { ItemModal } from './components/ItemModal';
 import { ItemsTable } from './components/ItemsTable';
 import { StatsCards } from './components/StatsCards';
-import type { CategoryFilter, ItemFormValues, MarketItem, SortOption, TierFilter } from './types/market';
+import type { CategoryFilter, EnchantFilter, ItemFormValues, MarketItem, SortOption, TierFilter } from './types/market';
 import { calculateProfit, calculateRoi } from './utils/calculations';
 import { loadItems, resetItems, saveItems } from './utils/storage';
+
+const defaultSortOption: SortOption = 'updatedAtDesc';
 
 const createItemFromForm = (values: ItemFormValues, id?: string): MarketItem => {
   const profit = calculateProfit(values.buyPrice, values.sellPrice);
@@ -23,20 +25,17 @@ const createItemFromForm = (values: ItemFormValues, id?: string): MarketItem => 
 
 function App() {
   const [items, setItems] = useState<MarketItem[]>(() => loadItems());
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MarketItem | null>(null);
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState<TierFilter>('Все');
+  const [enchantFilter, setEnchantFilter] = useState<EnchantFilter>('Все');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('Все');
-  const [sortOption, setSortOption] = useState<SortOption>('profitDesc');
+  const [sortOption, setSortOption] = useState<SortOption>(defaultSortOption);
 
   useEffect(() => {
     saveItems(items);
   }, [items]);
-
-  const selectedItem = useMemo(
-    () => items.find((item) => item.id === selectedItemId) ?? null,
-    [items, selectedItemId],
-  );
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -44,6 +43,7 @@ function App() {
     return [...items]
       .filter((item) => item.name.toLowerCase().includes(normalizedSearch))
       .filter((item) => (tierFilter === 'Все' ? true : item.tier === tierFilter))
+      .filter((item) => (enchantFilter === 'Все' ? true : item.enchant === enchantFilter))
       .filter((item) => (categoryFilter === 'Все' ? true : item.category === categoryFilter))
       .sort((first, second) => {
         switch (sortOption) {
@@ -53,20 +53,35 @@ function App() {
             return first.buyPrice - second.buyPrice;
           case 'sellPriceDesc':
             return second.sellPrice - first.sellPrice;
-          case 'updatedAtDesc':
-            return new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime();
           case 'profitDesc':
-          default:
             return second.profit - first.profit;
+          case 'updatedAtDesc':
+          default:
+            return new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime();
         }
       });
-  }, [categoryFilter, items, search, sortOption, tierFilter]);
+  }, [categoryFilter, enchantFilter, items, search, sortOption, tierFilter]);
+
+  const handleAddClick = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditClick = (item: MarketItem) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+  };
 
   const handleSaveItem = (values: ItemFormValues) => {
-    if (selectedItemId) {
-      setItems((currentItems) => currentItems.map((item) => (item.id === selectedItemId ? createItemFromForm(values, item.id) : item)));
-      setSelectedItemId(null);
-      return;
+    if (editingItem) {
+      setItems((currentItems) => currentItems.map((item) => (item.id === editingItem.id ? createItemFromForm(values, item.id) : item)));
+    } else {
+      handleModalClose();
     }
 
     setItems((currentItems) => [createItemFromForm(values), ...currentItems]);
@@ -82,9 +97,17 @@ function App() {
 
     setItems((currentItems) => currentItems.filter((currentItem) => currentItem.id !== itemId));
 
-    if (selectedItemId === itemId) {
-      setSelectedItemId(null);
+    if (editingItem?.id === itemId) {
+      handleModalClose();
     }
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setTierFilter('Все');
+    setEnchantFilter('Все');
+    setCategoryFilter('Все');
+    setSortOption(defaultSortOption);
   };
 
   const handleResetMockData = () => {
@@ -95,7 +118,7 @@ function App() {
     }
 
     setItems(resetItems());
-    setSelectedItemId(null);
+    handleModalClose();
   };
 
   return (
@@ -105,20 +128,24 @@ function App() {
       <Controls
         search={search}
         tierFilter={tierFilter}
+        enchantFilter={enchantFilter}
         categoryFilter={categoryFilter}
         sortOption={sortOption}
         onSearchChange={setSearch}
         onTierChange={setTierFilter}
+        onEnchantChange={setEnchantFilter}
         onCategoryChange={setCategoryFilter}
         onSortChange={setSortOption}
-        onAddNew={() => setSelectedItemId(null)}
+        onResetFilters={handleResetFilters}
+        onAddNew={handleAddClick}
         onResetMockData={handleResetMockData}
       />
 
       <div className="workspace-grid">
-        <ItemsTable items={visibleItems} selectedItemId={selectedItemId} onEdit={(item) => setSelectedItemId(item.id)} onDelete={handleDeleteItem} />
-        <ItemForm selectedItem={selectedItem} onSave={handleSaveItem} onClearSelection={() => setSelectedItemId(null)} />
+        <ItemsTable items={visibleItems} onEdit={handleEditClick} onDelete={handleDeleteItem} />
       </div>
+
+      <ItemModal isOpen={isModalOpen} editingItem={editingItem} onSave={handleSaveItem} onClose={handleModalClose} />
     </main>
   );
 }

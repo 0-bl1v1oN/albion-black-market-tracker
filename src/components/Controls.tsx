@@ -1,17 +1,21 @@
-import type { CategoryFilter, ItemCategory, SortOption, TierFilter } from '../types/market';
+import type { CategoryFilter, EnchantFilter, ItemCategory, SortOption, TierFilter } from '../types/market';
 
 const categories: CategoryFilter[] = ['Все', 'Оружие', 'Броня', 'Шлем', 'Обувь', 'Сумка', 'Другое'];
 const tiers: TierFilter[] = ['Все', 6, 7, 8];
+const enchants: EnchantFilter[] = ['Все', 0, 1, 2, 3, 4];
 
 interface ControlsProps {
   search: string;
   tierFilter: TierFilter;
+  enchantFilter: EnchantFilter;
   categoryFilter: CategoryFilter;
   sortOption: SortOption;
   onSearchChange: (value: string) => void;
   onTierChange: (value: TierFilter) => void;
+  onEnchantChange: (value: EnchantFilter) => void;
   onCategoryChange: (value: CategoryFilter) => void;
   onSortChange: (value: SortOption) => void;
+  onResetFilters: () => void;
   onAddNew: () => void;
   onResetMockData: () => void;
 }
@@ -19,12 +23,15 @@ interface ControlsProps {
 export const Controls = ({
   search,
   tierFilter,
+  enchantFilter,
   categoryFilter,
   sortOption,
   onSearchChange,
   onTierChange,
+  onEnchantChange,
   onCategoryChange,
   onSortChange,
+  onResetFilters,
   onAddNew,
   onResetMockData,
 }: ControlsProps) => {
@@ -38,6 +45,17 @@ export const Controls = ({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Например, Куртка"
         />
+      </label>
+
+      <label className="field">
+        <span>Зачар</span>
+        <select value={enchantFilter} onChange={(event) => onEnchantChange(event.target.value === 'Все' ? 'Все' : (Number(event.target.value) as EnchantFilter))}>
+          {enchants.map((enchant) => (
+            <option key={enchant} value={enchant}>
+              {enchant === 'Все' ? 'Все' : `.${enchant}`}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="field">
@@ -65,15 +83,18 @@ export const Controls = ({
       <label className="field field-sort">
         <span>Сортировка</span>
         <select value={sortOption} onChange={(event) => onSortChange(event.target.value as SortOption)}>
+          <option value="updatedAtDesc">Недавно обновленные</option>
           <option value="profitDesc">Профит по убыванию</option>
           <option value="roiDesc">ROI по убыванию</option>
           <option value="buyPriceAsc">Цена покупки по возрастанию</option>
           <option value="sellPriceDesc">Цена продажи по убыванию</option>
-          <option value="updatedAtDesc">Недавно обновленные</option>
         </select>
       </label>
 
       <div className="controls-actions">
+        <button className="button button-secondary" type="button" onClick={onResetFilters}>
+          Сбросить фильтры
+        </button>
         <button className="button button-primary" type="button" onClick={onAddNew}>
           Добавить предмет
         </button>

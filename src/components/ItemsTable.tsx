@@ -3,12 +3,11 @@ import { formatDateTime, formatPrice, formatRoi, getProfitClassName } from '../u
 
 interface ItemsTableProps {
   items: MarketItem[];
-  selectedItemId: string | null;
   onEdit: (item: MarketItem) => void;
   onDelete: (itemId: string) => void;
 }
 
-export const ItemsTable = ({ items, selectedItemId, onEdit, onDelete }: ItemsTableProps) => {
+export const ItemsTable = ({ items, onEdit, onDelete }: ItemsTableProps) => {
   return (
     <section className="table-card" aria-label="Таблица предметов">
       <div className="table-heading">
@@ -45,8 +44,8 @@ export const ItemsTable = ({ items, selectedItemId, onEdit, onDelete }: ItemsTab
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id} className={selectedItemId === item.id ? 'selected-row' : undefined}>
-                  <td>
+                <tr key={item.id}>
+                  <td className="item-name-cell">
                     <strong>{item.name}</strong>
                     {item.comment && <small>{item.comment}</small>}
                   </td>

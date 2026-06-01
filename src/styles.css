@@ -171,7 +171,7 @@ h2 {
 
 .controls-panel {
   display: grid;
-  grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(140px, 0.7fr)) minmax(230px, 1fr) auto;
+  grid-template-columns: minmax(200px, 1.3fr) repeat(3, minmax(110px, 0.55fr)) minmax(210px, 0.9fr) auto;
   gap: 14px;
   align-items: end;
   padding: 18px;
@@ -240,7 +240,7 @@ textarea:focus {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   align-items: start;
 }
@@ -269,14 +269,14 @@ textarea:focus {
 
 .table-scroll {
   overflow-x: auto;
-  padding: 18px 22px 22px;
+  padding: 14px 16px 18px;
 }
 
 table {
   width: 100%;
-  min-width: 1040px;
   border-collapse: separate;
   border-spacing: 0 8px;
+  table-layout: auto;
 }
 
 th {
@@ -285,16 +285,25 @@ th {
   letter-spacing: 0.08em;
   text-align: left;
   text-transform: uppercase;
-  padding: 0 12px 8px;
+  padding: 0 8px 8px;
 }
 
 td {
   background: #15181d;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   border-top: 1px solid rgba(255, 255, 255, 0.03);
-  padding: 14px 12px;
+  padding: 12px 8px;
   color: #f5ead4;
   white-space: nowrap;
+}
+
+.item-name-cell {
+  min-width: 180px;
+  white-space: normal;
+}
+
+.item-name-cell strong {
+  display: block;
 }
 
 td:first-child {
@@ -321,10 +330,15 @@ td small {
   background: rgba(216, 173, 85, 0.08);
 }
 
+.table-actions {
+  gap: 8px;
+}
+
 .table-actions button {
   border: 0;
   background: transparent;
   color: var(--gold-bright);
+  font-size: 0.9rem;
   font-weight: 800;
   padding: 0;
 }
@@ -339,9 +353,23 @@ td small {
 }
 
 .form-card {
-  position: sticky;
-  top: 20px;
   padding-bottom: 22px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.68);
+  padding: 24px;
+}
+
+.modal-card {
+  width: min(680px, 100%);
+  max-height: min(92vh, 920px);
+  overflow-y: auto;
 }
 
 .form-card form {
@@ -414,10 +442,6 @@ td small {
   .form-card {
     grid-column: 1 / -1;
   }
-
-  .form-card {
-    position: static;
-  }
 }
 
 @media (max-width: 760px) {
@@ -458,6 +482,19 @@ td small {
     display: block;
   }
 
+  table {
+    min-width: 880px;
+  }
+
+  .table-scroll {
+    padding: 12px;
+  }
+
+  .modal-backdrop {
+    align-items: start;
+    padding: 12px;
+  }
+  
   .table-heading span {
     display: inline-block;
     margin-top: 12px;
