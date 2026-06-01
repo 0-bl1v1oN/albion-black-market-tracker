@@ -13,7 +13,7 @@ type ModalMode = 'create' | 'edit';
 function App() {
   const {
     items,
-    loading,
+    initialLoading,
     error,
     isAutoRefreshEnabled,
     isRemoteConfigured,
@@ -142,7 +142,7 @@ function App() {
         onToggleAutoRefresh={toggleAutoRefresh}
       />
 
-      {loading && <div className="app-loading">Загрузка данных...</div>}
+      {initialLoading && items.length === 0 && <div className="app-loading">Загрузка данных...</div>}
 
       <div className="workspace-grid">
         <ItemsTable items={visibleItems} onEdit={handleEditClick} onDelete={(itemId) => void handleDeleteItem(itemId)} />

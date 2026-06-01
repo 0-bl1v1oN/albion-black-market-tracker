@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as marketApi from '../api/marketApi';
 import type { ItemFormValues, MarketItem } from '../types/market';
 import { calculateProfit, calculateRoi } from '../utils/calculations';
@@ -27,7 +27,9 @@ const createLocalItemFromForm = (values: ItemFormValues, id: string = crypto.ran
 export const useMarketItems = () => {
   const isRemoteConfigured = useMemo(() => Boolean(import.meta.env.VITE_APPS_SCRIPT_URL?.trim()), []);
   const [items, setItems] = useState<MarketItem[]>(() => (isRemoteConfigured ? [] : loadLocalItems()));
-  const [loading, setLoading] = useState(isRemoteConfigured);
+  const [initialLoading, setInitialLoading] = useState(isRemoteConfigured);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const hasCompletedInitialLoad = useRef(!isRemoteConfigured);
   const [error, setError] = useState<string | null>(
     isRemoteConfigured ? null : 'VITE_APPS_SCRIPT_URL не задан. Сейчас используется локальный fallback на моковых данных.',
   );
@@ -38,11 +40,19 @@ export const useMarketItems = () => {
       const localItems = loadLocalItems();
       setItems(localItems);
       setError('VITE_APPS_SCRIPT_URL не задан. Сейчас используется локальный fallback на моковых данных.');
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
+      hasCompletedInitialLoad.current = true;
       return localItems;
     }
 
-    setLoading(true);
+    const isInitialRequest = !hasCompletedInitialLoad.current;
+
+    if (isInitialRequest) {
+      setInitialLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
 
     try {
       const loadedItems = await marketApi.listItems();
@@ -54,7 +64,12 @@ export const useMarketItems = () => {
       setError(message);
       throw loadError;
     } finally {
-      setLoading(false);
+      if (isInitialRequest) {
+        hasCompletedInitialLoad.current = true;
+        setInitialLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   }, [isRemoteConfigured]);
 
@@ -150,7 +165,9 @@ export const useMarketItems = () => {
 
   return {
     items,
-    loading,
+    loading: initialLoading || isRefreshing,
+    initialLoading,
+    isRefreshing,
     error,
     isAutoRefreshEnabled,
     isRemoteConfigured,
