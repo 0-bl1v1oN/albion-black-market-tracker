@@ -16,6 +16,7 @@ function App() {
     initialLoading,
     error,
     isRefreshing,
+    isUsingCache,
     isAutoRefreshEnabled,
     isRemoteConfigured,
     loadItems,
@@ -111,7 +112,12 @@ function App() {
 
   return (
     <main className="app-shell">
-      <Header error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} isRefreshing={isRefreshing} />
+      <Header
+        error={error}
+        isAutoRefreshEnabled={isAutoRefreshEnabled}
+        isRefreshing={isRefreshing}
+        isUsingCache={isUsingCache}
+      />
 
       {!isRemoteConfigured && (
         <div className="app-warning" role="alert">

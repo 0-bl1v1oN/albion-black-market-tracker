@@ -2,7 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as marketApi from '../api/marketApi';
 import type { ItemFormValues, MarketItem } from '../types/market';
 import { calculateProfit, calculateRoi } from '../utils/calculations';
-import { loadItems as loadLocalItems, saveItems as saveLocalItems } from '../utils/storage';
+import {
+  loadCachedItems,
+  loadItems as loadLocalItems,
+  saveCachedItems,
+  saveItems as saveLocalItems,
+} from '../utils/storage';
 
 const DEFAULT_POLLING_INTERVAL_MS = 15000;
 
@@ -30,38 +35,69 @@ const createLocalItemFromForm = (values: ItemFormValues, id: string = crypto.ran
 
 export const useMarketItems = () => {
   const isRemoteConfigured = useMemo(() => Boolean(import.meta.env.VITE_APPS_SCRIPT_URL?.trim()), []);
-  const [items, setItems] = useState<MarketItem[]>(() => (isRemoteConfigured ? [] : loadLocalItems()));
-  const [initialLoading, setInitialLoading] = useState(isRemoteConfigured);
+  const initialCachedItems = useMemo(() => (isRemoteConfigured ? loadCachedItems() : null), [isRemoteConfigured]);
+  const initialItems = useMemo(
+    () => (isRemoteConfigured ? initialCachedItems?.items ?? [] : loadLocalItems()),
+    [initialCachedItems, isRemoteConfigured],
+  );
+  const [items, setItems] = useState<MarketItem[]>(initialItems);
+  const itemsRef = useRef(initialItems);
+  const [initialLoading, setInitialLoading] = useState(isRemoteConfigured && !initialCachedItems);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const hasCompletedInitialLoad = useRef(!isRemoteConfigured);
+  const hasCompletedInitialLoad = useRef(!isRemoteConfigured || Boolean(initialCachedItems));
   const [error, setError] = useState<string | null>(
     isRemoteConfigured ? null : 'VITE_APPS_SCRIPT_URL не задан. Сейчас используется локальный fallback на моковых данных.',
   );
+  const [isUsingCache, setIsUsingCacheState] = useState(Boolean(initialCachedItems));
+  const isUsingCacheRef = useRef(Boolean(initialCachedItems));
+  const [cacheUpdatedAt, setCacheUpdatedAt] = useState<string | undefined>(initialCachedItems?.cachedAt);
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
 
+  const replaceItems = useCallback((nextItems: MarketItem[]) => {
+    itemsRef.current = nextItems;
+    setItems(nextItems);
+  }, []);
+
+  const setCacheUsage = useCallback((nextValue: boolean) => {
+    isUsingCacheRef.current = nextValue;
+    setIsUsingCacheState(nextValue);
+  }, []);
+
+  const persistCachedItems = useCallback((nextItems: MarketItem[]) => {
+    const cachedItems = saveCachedItems(nextItems);
+
+    if (cachedItems) {
+      setCacheUpdatedAt(cachedItems.cachedAt);
+    }
+  }, []);
+  
   const loadItems = useCallback(
     async ({ silent = false }: LoadItemsOptions = {}) => {
       if (!isRemoteConfigured) {
         const localItems = loadLocalItems();
-        setItems(localItems);
+        replaceItems(localItems);
         setError('VITE_APPS_SCRIPT_URL не задан. Сейчас используется локальный fallback на моковых данных.');
         setInitialLoading(false);
         setIsRefreshing(false);
         hasCompletedInitialLoad.current = true;
+        setCacheUsage(false);
         return localItems;
       }
 
     const isInitialRequest = !hasCompletedInitialLoad.current;
+    const shouldShowRefreshing = !isInitialRequest && (!silent || isUsingCacheRef.current);
 
       if (isInitialRequest) {
         setInitialLoading(true);
-      } else if (!silent) {
+      } else if (shouldShowRefreshing) {
         setIsRefreshing(true);
       }
 
       try {
         const loadedItems = await marketApi.listItems();
-        setItems(loadedItems);
+        replaceItems(loadedItems);
+        persistCachedItems(loadedItems);
+        setCacheUsage(false);
         setError(null);
         return loadedItems;
       } catch (loadError) {
@@ -72,23 +108,21 @@ export const useMarketItems = () => {
         if (isInitialRequest) {
           hasCompletedInitialLoad.current = true;
           setInitialLoading(false);
-        } else if (!silent) {
+        } else if (shouldShowRefreshing) {
           setIsRefreshing(false);
         }
       }
     },
-    [isRemoteConfigured],
+    [isRemoteConfigured, persistCachedItems, replaceItems, setCacheUsage],
   );
 
   const createItem = useCallback(
     async (values: ItemFormValues) => {
       if (!isRemoteConfigured) {
         const createdItem = createLocalItemFromForm(values);
-        setItems((currentItems) => {
-          const nextItems = [createdItem, ...currentItems];
-          saveLocalItems(nextItems);
-          return nextItems;
-        });
+        const nextItems = [createdItem, ...itemsRef.current];
+        replaceItems(nextItems);
+        saveLocalItems(nextItems);
         void loadItems({ silent: true }).catch(() => undefined);
         return createdItem;
       }
@@ -96,7 +130,10 @@ export const useMarketItems = () => {
       try {
         const apiItem = await marketApi.createItem(values);
         const createdItem = apiItem ?? createLocalItemFromForm(values);
-        setItems((currentItems) => [createdItem, ...currentItems]);
+        const nextItems = [createdItem, ...itemsRef.current];
+        replaceItems(nextItems);
+        persistCachedItems(nextItems);
+        setCacheUsage(false);
         setError(null);
         void loadItems({ silent: true }).catch(() => undefined);
         return createdItem;
@@ -106,18 +143,16 @@ export const useMarketItems = () => {
         throw createError;
       }
     },
-    [isRemoteConfigured, loadItems],
+    [isRemoteConfigured, loadItems, persistCachedItems, replaceItems, setCacheUsage],
   );
 
   const updateItem = useCallback(
     async (id: string, values: ItemFormValues) => {
       if (!isRemoteConfigured) {
         const updatedItem = createLocalItemFromForm(values, id);
-        setItems((currentItems) => {
-          const nextItems = currentItems.map((item) => (item.id === id ? updatedItem : item));
-          saveLocalItems(nextItems);
-          return nextItems;
-        });
+        const nextItems = itemsRef.current.map((item) => (item.id === id ? updatedItem : item));
+        replaceItems(nextItems);
+        saveLocalItems(nextItems);
         void loadItems({ silent: true }).catch(() => undefined);
         return updatedItem;
       }
@@ -125,7 +160,10 @@ export const useMarketItems = () => {
       try {
         const apiItem = await marketApi.updateItem({ ...values, id });
         const updatedItem = apiItem ?? createLocalItemFromForm(values, id);
-        setItems((currentItems) => currentItems.map((item) => (item.id === id ? updatedItem : item)));
+        const nextItems = itemsRef.current.map((item) => (item.id === id ? updatedItem : item));
+        replaceItems(nextItems);
+        persistCachedItems(nextItems);
+        setCacheUsage(false);
         setError(null);
         void loadItems({ silent: true }).catch(() => undefined);
         return updatedItem;
@@ -135,24 +173,25 @@ export const useMarketItems = () => {
         throw updateError;
       }
     },
-    [isRemoteConfigured, loadItems],
+    [isRemoteConfigured, loadItems, persistCachedItems, replaceItems, setCacheUsage],
   );
 
   const deleteItem = useCallback(
     async (id: string) => {
       if (!isRemoteConfigured) {
-        setItems((currentItems) => {
-          const nextItems = currentItems.filter((item) => item.id !== id);
-          saveLocalItems(nextItems);
-          return nextItems;
-        });
+        const nextItems = itemsRef.current.filter((item) => item.id !== id);
+        replaceItems(nextItems);
+        saveLocalItems(nextItems);
         void loadItems({ silent: true }).catch(() => undefined);
         return;
       }
 
       try {
         await marketApi.deleteItem(id);
-        setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+        const nextItems = itemsRef.current.filter((item) => item.id !== id);
+        replaceItems(nextItems);
+        persistCachedItems(nextItems);
+        setCacheUsage(false);
         setError(null);
         void loadItems({ silent: true }).catch(() => undefined);
       } catch (deleteError) {
@@ -161,7 +200,7 @@ export const useMarketItems = () => {
         throw deleteError;
       }
     },
-    [isRemoteConfigured, loadItems],
+    [isRemoteConfigured, loadItems, persistCachedItems, replaceItems, setCacheUsage],
   );
 
   const toggleAutoRefresh = useCallback(() => {
@@ -169,8 +208,8 @@ export const useMarketItems = () => {
   }, []);
 
   useEffect(() => {
-    void loadItems({ silent: false }).catch(() => undefined);
-  }, [loadItems]);
+    void loadItems({ silent: Boolean(initialCachedItems) }).catch(() => undefined);
+  }, [initialCachedItems, loadItems]);
 
   useEffect(() => {
     if (!isRemoteConfigured || !isAutoRefreshEnabled) {
@@ -190,6 +229,8 @@ export const useMarketItems = () => {
     initialLoading,
     isRefreshing,
     error,
+    isUsingCache,
+    cacheUpdatedAt,
     isAutoRefreshEnabled,
     isRemoteConfigured,
     loadItems,

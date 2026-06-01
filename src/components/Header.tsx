@@ -4,9 +4,10 @@ interface HeaderProps {
   error: string | null;
   isAutoRefreshEnabled: boolean;
   isRefreshing: boolean;
+  isUsingCache: boolean;
 }
 
-export const Header = ({ error, isAutoRefreshEnabled, isRefreshing }: HeaderProps) => {
+export const Header = ({ error, isAutoRefreshEnabled, isRefreshing, isUsingCache }: HeaderProps) => {
   return (
     <header className="app-header">
       <div>
@@ -24,7 +25,12 @@ export const Header = ({ error, isAutoRefreshEnabled, isRefreshing }: HeaderProp
           <span>Друг</span>
           <strong>Онлайн</strong>
         </div>
-        <SyncStatus error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} isRefreshing={isRefreshing} />
+        <SyncStatus
+          error={error}
+          isAutoRefreshEnabled={isAutoRefreshEnabled}
+          isRefreshing={isRefreshing}
+          isUsingCache={isUsingCache}
+        />
       </div>
     </header>
   );
