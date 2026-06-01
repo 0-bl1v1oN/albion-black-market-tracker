@@ -1,4 +1,11 @@
-export const Header = () => {
+import { SyncStatus } from './SyncStatus';
+
+interface HeaderProps {
+  error: string | null;
+  isAutoRefreshEnabled: boolean;
+}
+
+export const Header = ({ error, isAutoRefreshEnabled }: HeaderProps) => {
   return (
     <header className="app-header">
       <div>
@@ -16,7 +23,7 @@ export const Header = () => {
           <span>Друг</span>
           <strong>Онлайн</strong>
         </div>
-        <div className="sync-status">Синхронизация: моковый режим</div>
+        <SyncStatus error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} />
       </div>
     </header>
   );

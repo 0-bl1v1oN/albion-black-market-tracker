@@ -16,7 +16,7 @@ export const StatsCards = ({ items }: StatsCardsProps) => {
       <article className="stat-card">
         <span>Всего предметов</span>
         <strong>{items.length}</strong>
-        <p>Позиций в локальном списке</p>
+        <p>Позиций в базе предметов</p>
       </article>
       <article className="stat-card">
         <span>Средний профит</span>

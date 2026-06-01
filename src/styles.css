@@ -144,6 +144,32 @@ h2 {
   text-align: center;
 }
 
+.sync-status-error {
+  color: #fecaca;
+}
+
+.app-warning,
+.app-loading {
+  margin: 16px 0 0;
+  border: 1px solid rgba(216, 173, 85, 0.3);
+  border-radius: 16px;
+  background: rgba(216, 173, 85, 0.08);
+  color: #f9df9a;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.app-warning-error {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

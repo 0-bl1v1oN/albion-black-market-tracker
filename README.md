@@ -1,10 +1,10 @@
 # Albion Black Market Tracker
 
-MVP frontend-приложения на React, Vite и TypeScript для локального учета торговли на черном рынке Albion Online.
+MVP frontend-приложения на React, Vite и TypeScript для учета торговли на черном рынке Albion Online.
 
-## Что делать сейчас
+Основной режим хранения данных — Google Таблица через Google Apps Script Web App. Если `VITE_APPS_SCRIPT_URL` не задан, приложение не падает и временно работает на локальном fallback с моковыми данными/localStorage.
 
-Проект уже написан. Его не нужно вручную «собирать» перед обычным просмотром. Для разработки нужно один раз установить зависимости, затем запустить dev-сервер.
+## Быстрый старт
 
 ```bash
 npm install
@@ -14,24 +14,82 @@ npm run dev
 После команды `npm run dev` Vite покажет локальный адрес, обычно `http://localhost:5173/`. Откройте его в браузере.
 
 ## Сборка
-
-Сборка нужна позже — чтобы проверить production-версию или выложить проект на хостинг.
-
 ```bash
 npm run build
 ```
 
-## Почему раньше была ошибка ENOENT package.json
+## Подключение Google Таблицы
 
-`package.json` должен лежать в корне проекта, чтобы команды `npm install`, `npm run dev` и `npm run build` запускались прямо из папки `albion-black-market-tracker`.
+1. Создать Google Таблицу.
+2. Назвать лист `Items`.
+3. В первую строку добавить заголовки:
+   ```text
+   id
+   name
+   category
+   tier
+   enchant
+   buyPrice
+   sellPrice
+   profit
+   roi
+   updatedBy
+   updatedAt
+   comment
+   ```
+4. Открыть **Расширения → Apps Script**.
+5. Вставить код из `apps-script/Code.gs`.
+6. Вставить `SPREADSHEET_ID` в константу `SPREADSHEET_ID` в начале `apps-script/Code.gs` вместо `PASTE_SPREADSHEET_ID_HERE`.
+7. Проверить `SECRET_KEY`:
+   ```text
+   albion_bm_tracker_8xQ2mP_2026_private
+   ```
+8. Запустить `setupSheet()` в редакторе Apps Script и выдать нужные разрешения.
+9. Нажать **Deploy / Начать развертывание**.
+10. Выбрать **New deployment / Новое развертывание**.
+11. Выбрать тип **Web app**.
+12. Установить **Execute as: Me**.
+13. Установить **Who has access: Anyone with the link**.
+14. Получить **Web App URL**.
+15. Создать `.env` в корне проекта:
+    ```env
+    VITE_APPS_SCRIPT_URL=ваш_web_app_url
+    VITE_SECRET_KEY=albion_bm_tracker_8xQ2mP_2026_private
+    VITE_POLLING_INTERVAL_MS=5000
+    ```
+16. Запустить проект:
+    ```bash
+    npm install
+    npm run dev
+    ```
+
+## Как проверить синхронизацию
+
+- Открыть сайт в двух вкладках.
+- Добавить предмет в одной вкладке.
+- Через 5 секунд он должен появиться во второй вкладке.
+- Изменить цену в одной вкладке.
+- Через 5 секунд обновление должно появиться во второй.
+
+## Как работает API
+
+Frontend отправляет только `POST`-запросы в Google Apps Script Web App. Формат тела запроса:
+
+```json
+{
+  "secret": "albion_bm_tracker_8xQ2mP_2026_private",
+  "action": "list",
+  "payload": {}
+}
+```
+
+Поддерживаемые actions:
+
+- `list` — получить предметы из Google Таблицы.
+- `create` — создать строку; `id`, `profit`, `roi` и `updatedAt` считаются на стороне Apps Script.
+- `update` — найти строку по `id` и обновить ее без создания дубля.
+- `delete` — найти строку по `id` и удалить ее.
 
 ## Данные
 
-Начальные моковые предметы лежат в `src/data/mockItems.ts`. Пользовательские изменения сохраняются в `localStorage` браузера.
-
-## Как потом заменить localStorage на Google Apps Script API
-
-Сейчас доступ к хранилищу изолирован в `src/utils/storage.ts`. Позже можно заменить функции `loadItems` и `saveItems` на запросы `fetch` к опубликованному Google Apps Script Web App:
-
-- `loadItems()` → `GET` запрос к Apps Script;
-`saveItems(items)` → `POST` запрос с JSON-массивом предметов.
+Начальные моковые предметы лежат в `src/data/mockItems.ts`. Они используются только как fallback, если не настроен `VITE_APPS_SCRIPT_URL`.

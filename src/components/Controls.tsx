@@ -17,6 +17,9 @@ interface ControlsProps {
   onSortChange: (value: SortOption) => void;
   onResetFilters: () => void;
   onAddNew: () => void;
+  onRefresh: () => void;
+  isAutoRefreshEnabled: boolean;
+  onToggleAutoRefresh: () => void;
 }
 
 export const Controls = ({
@@ -32,6 +35,9 @@ export const Controls = ({
   onSortChange,
   onResetFilters,
   onAddNew,
+  onRefresh,
+  isAutoRefreshEnabled,
+  onToggleAutoRefresh,
 }: ControlsProps) => {
   return (
     <section className="controls-panel" aria-label="Панель управления">
@@ -92,6 +98,12 @@ export const Controls = ({
       <div className="controls-actions">
         <button className="button button-secondary" type="button" onClick={onResetFilters}>
           Сброс
+        </button>
+        <button className="button button-secondary" type="button" onClick={onRefresh}>
+          Обновить
+        </button>
+        <button className="button button-secondary" type="button" onClick={onToggleAutoRefresh}>
+          Автообновление: {isAutoRefreshEnabled ? 'вкл' : 'выкл'}
         </button>
         <button className="button button-primary" type="button" onClick={onAddNew}>
           Добавить предмет

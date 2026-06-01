@@ -19,7 +19,7 @@ interface ItemModalProps {
   isOpen: boolean;
   modalMode: 'create' | 'edit';
   editingItem: MarketItem | null;
-  onSave: (values: ItemFormValues) => void;
+  onSave: (values: ItemFormValues) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -28,6 +28,7 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
   const [buyPriceInput, setBuyPriceInput] = useState('');
   const [sellPriceInput, setSellPriceInput] = useState('');
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -102,7 +103,7 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
     return '';
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const validationError = validate();
 
@@ -112,14 +113,22 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
     }
 
     setError('');
-    onSave({
-      ...formValues,
-      name: formValues.name.trim(),
-      buyPrice: Number(buyPriceInput || 0),
-      sellPrice: Number(sellPriceInput || 0),
-      updatedBy: formValues.updatedBy.trim(),
-      comment: formValues.comment.trim(),
-    });
+    setIsSaving(true);
+
+    try {
+      await onSave({
+        ...formValues,
+        name: formValues.name.trim(),
+        buyPrice: Number(buyPriceInput || 0),
+        sellPrice: Number(sellPriceInput || 0),
+        updatedBy: formValues.updatedBy.trim(),
+        comment: formValues.comment.trim(),
+      });
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Не удалось сохранить предмет.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleClear = () => {
@@ -229,13 +238,13 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
           {error && <p className="form-error">{error}</p>}
 
           <div className="form-actions">
-            <button className="button button-primary" type="submit">
-              Сохранить
+            <button className="button button-primary" type="submit" disabled={isSaving}>
+              {isSaving ? 'Сохранение...' : 'Сохранить'}
             </button>
-            <button className="button button-secondary" type="button" onClick={onClose}>
+            <button className="button button-secondary" type="button" onClick={onClose} disabled={isSaving}>
               Отмена
             </button>
-            <button className="button button-secondary" type="button" onClick={handleClear}>
+            <button className="button button-secondary" type="button" onClick={handleClear} disabled={isSaving}>
               Очистить
             </button>
           </div>

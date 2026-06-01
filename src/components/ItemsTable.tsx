@@ -13,7 +13,7 @@ export const ItemsTable = ({ items, onEdit, onDelete }: ItemsTableProps) => {
       <div className="table-heading">
         <div>
           <h2>Предметы</h2>
-          <p>Локальная база цен и профита</p>
+          <p>База цен и профита</p>
         </div>
         <span>{items.length} найдено</span>
       </div>

@@ -1,31 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controls } from './components/Controls';
 import { Header } from './components/Header';
 import { ItemModal } from './components/ItemModal';
 import { ItemsTable } from './components/ItemsTable';
 import { StatsCards } from './components/StatsCards';
+import { useMarketItems } from './hooks/useMarketItems';
 import type { CategoryFilter, EnchantFilter, ItemFormValues, MarketItem, SortOption, TierFilter } from './types/market';
-import { calculateProfit, calculateRoi } from './utils/calculations';
-import { loadItems, saveItems } from './utils/storage';
 
 const defaultSortOption: SortOption = 'updatedAtDesc';
 type ModalMode = 'create' | 'edit';
 
-const createItemFromForm = (values: ItemFormValues, id?: string): MarketItem => {
-  const profit = calculateProfit(values.buyPrice, values.sellPrice);
-  const roi = calculateRoi(values.buyPrice, values.sellPrice);
-
-  return {
-    ...values,
-    id: id ?? crypto.randomUUID(),
-    profit,
-    roi,
-    updatedAt: new Date().toISOString(),
-  };
-};
-
 function App() {
-  const [items, setItems] = useState<MarketItem[]>(() => loadItems());
+  const {
+    items,
+    loading,
+    error,
+    isAutoRefreshEnabled,
+    isRemoteConfigured,
+    loadItems,
+    createItem,
+    updateItem,
+    deleteItem,
+    toggleAutoRefresh,
+  } = useMarketItems();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>('create');
   const [editingItem, setEditingItem] = useState<MarketItem | null>(null);
@@ -34,10 +31,6 @@ function App() {
   const [enchantFilter, setEnchantFilter] = useState<EnchantFilter>('Все');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('Все');
   const [sortOption, setSortOption] = useState<SortOption>(defaultSortOption);
-
-  useEffect(() => {
-    saveItems(items);
-  }, [items]);
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -82,27 +75,17 @@ function App() {
     setModalMode('create');
   };
 
-  const createItem = (values: ItemFormValues) => {
-    setItems((currentItems) => [createItemFromForm(values), ...currentItems]);
-  };
-
-  const updateItem = (itemId: string, values: ItemFormValues) => {
-    setItems((currentItems) =>
-      currentItems.map((item) => (item.id === itemId ? createItemFromForm(values, item.id) : item)),
-    );
-  };
-
-  const handleSaveItem = (values: ItemFormValues) => {
+  const handleSaveItem = async (values: ItemFormValues) => {
     if (modalMode === 'edit' && editingItem) {
-      updateItem(editingItem.id, values);
+      await updateItem(editingItem.id, values);
     } else {
-      createItem(values);
+      await createItem(values);
     }
 
     handleModalClose();
   };
 
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteItem = async (itemId: string) => {
     const item = items.find((currentItem) => currentItem.id === itemId);
     const isConfirmed = confirm(`Удалить предмет «${item?.name ?? 'без названия'}»?`);
 
@@ -110,7 +93,7 @@ function App() {
       return;
     }
 
-    setItems((currentItems) => currentItems.filter((currentItem) => currentItem.id !== itemId));
+    await deleteItem(itemId);
 
     if (editingItem?.id === itemId) {
       handleModalClose();
@@ -127,7 +110,19 @@ function App() {
 
   return (
     <main className="app-shell">
-      <Header />
+      <Header error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} />
+
+      {!isRemoteConfigured && (
+        <div className="app-warning" role="alert">
+          VITE_APPS_SCRIPT_URL не задан. Приложение временно работает на локальном fallback, а Google Таблица не обновляется.
+        </div>
+      )}
+
+      {isRemoteConfigured && error && (
+        <div className="app-warning app-warning-error" role="alert">
+          {error}
+        </div>
+      )}
       <StatsCards items={items} />
       <Controls
         search={search}
@@ -142,10 +137,15 @@ function App() {
         onSortChange={setSortOption}
         onResetFilters={handleResetFilters}
         onAddNew={handleAddClick}
+        onRefresh={() => void loadItems().catch(() => undefined)}
+        isAutoRefreshEnabled={isAutoRefreshEnabled}
+        onToggleAutoRefresh={toggleAutoRefresh}
       />
 
+      {loading && <div className="app-loading">Загрузка данных...</div>}
+
       <div className="workspace-grid">
-        <ItemsTable items={visibleItems} onEdit={handleEditClick} onDelete={handleDeleteItem} />
+        <ItemsTable items={visibleItems} onEdit={handleEditClick} onDelete={(itemId) => void handleDeleteItem(itemId)} />
       </div>
 
       <ItemModal
