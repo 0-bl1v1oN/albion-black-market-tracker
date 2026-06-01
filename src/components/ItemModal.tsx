@@ -55,6 +55,7 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
     }
 
     setError('');
+    setIsSaving(false);
   }, [editingItem, isOpen]);
 
   const numericBuyPrice = Number(buyPriceInput || 0);
@@ -142,8 +143,14 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
     return null;
   }
 
+  const handleBackdropMouseDown = () => {
+    if (!isSaving) {
+      onClose();
+    }
+  };
+  
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div className="modal-backdrop" role="presentation" onMouseDown={handleBackdropMouseDown}>
       <section className="form-card modal-card" aria-label="Форма предмета" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
         <div className="form-heading">
           <p className="eyebrow">Запись рынка</p>
@@ -212,7 +219,7 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
               </select>
             </label>
 
-          <label className="field">
+            <label className="field">
               <span>Кто обновил</span>
               <input value={formValues.updatedBy} onChange={(event) => updateField('updatedBy', event.target.value)} placeholder="Макс" />
             </label>
@@ -239,7 +246,7 @@ export const ItemModal = ({ isOpen, modalMode, editingItem, onSave, onClose }: I
 
           <div className="form-actions">
             <button className="button button-primary" type="submit" disabled={isSaving}>
-              {isSaving ? 'Сохранение...' : 'Сохранить'}
+              {isSaving ? 'Сохраняем...' : 'Сохранить'}
             </button>
             <button className="button button-secondary" type="button" onClick={onClose} disabled={isSaving}>
               Отмена

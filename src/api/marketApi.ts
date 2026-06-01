@@ -58,24 +58,16 @@ export const listItems = async (): Promise<MarketItem[]> => {
   return data.items ?? [];
 };
 
-export const createItem = async (item: ItemFormValues): Promise<MarketItem> => {
+export const createItem = async (item: ItemFormValues): Promise<MarketItem | null> => {
   const data = await requestMarketApi<ApiResponse>('create', item);
 
-  if (!data.item) {
-    throw new Error('Google Apps Script не вернул созданный предмет.');
-  }
-
-  return data.item;
+  return data.item ?? null;
 };
 
-export const updateItem = async (item: UpdateItemPayload): Promise<MarketItem> => {
+export const updateItem = async (item: UpdateItemPayload): Promise<MarketItem | null> => {
   const data = await requestMarketApi<ApiResponse>('update', item);
 
-  if (!data.item) {
-    throw new Error('Google Apps Script не вернул обновленный предмет.');
-  }
-
-  return data.item;
+  return data.item ?? null;
 };
 
 export const deleteItem = async (id: string): Promise<void> => {

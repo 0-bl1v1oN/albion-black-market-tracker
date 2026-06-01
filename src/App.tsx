@@ -15,6 +15,7 @@ function App() {
     items,
     initialLoading,
     error,
+    isRefreshing,
     isAutoRefreshEnabled,
     isRemoteConfigured,
     loadItems,
@@ -110,7 +111,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      <Header error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} />
+      <Header error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} isRefreshing={isRefreshing} />
 
       {!isRemoteConfigured && (
         <div className="app-warning" role="alert">
@@ -123,7 +124,7 @@ function App() {
           {error}
         </div>
       )}
-      <StatsCards items={items} />
+      <StatsCards items={items} initialLoading={initialLoading} />
       <Controls
         search={search}
         tierFilter={tierFilter}
@@ -137,15 +138,22 @@ function App() {
         onSortChange={setSortOption}
         onResetFilters={handleResetFilters}
         onAddNew={handleAddClick}
-        onRefresh={() => void loadItems().catch(() => undefined)}
+        onRefresh={() => void loadItems({ silent: false }).catch(() => undefined)}
         isAutoRefreshEnabled={isAutoRefreshEnabled}
         onToggleAutoRefresh={toggleAutoRefresh}
       />
 
-      {initialLoading && items.length === 0 && <div className="app-loading">Загрузка данных...</div>}
+      {initialLoading && items.length === 0 && <div className="app-loading">Загружаем базу...</div>}
 
       <div className="workspace-grid">
-        <ItemsTable items={visibleItems} onEdit={handleEditClick} onDelete={(itemId) => void handleDeleteItem(itemId)} />
+        <ItemsTable
+          items={visibleItems}
+          totalItems={items.length}
+          initialLoading={initialLoading}
+          hasError={Boolean(error)}
+          onEdit={handleEditClick}
+          onDelete={(itemId) => void handleDeleteItem(itemId)}
+        />
       </div>
 
       <ItemModal

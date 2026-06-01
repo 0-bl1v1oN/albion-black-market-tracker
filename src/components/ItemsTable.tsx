@@ -3,11 +3,29 @@ import { formatDateTime, formatPrice, formatRoi, getProfitClassName } from '../u
 
 interface ItemsTableProps {
   items: MarketItem[];
+  totalItems: number;
+  initialLoading: boolean;
+  hasError: boolean;
   onEdit: (item: MarketItem) => void;
   onDelete: (itemId: string) => void;
 }
 
-export const ItemsTable = ({ items, onEdit, onDelete }: ItemsTableProps) => {
+export const ItemsTable = ({ items, totalItems, initialLoading, hasError, onEdit, onDelete }: ItemsTableProps) => {
+  const getEmptyMessage = () => {
+    if (initialLoading) {
+      return 'Загружаем базу...';
+    }
+
+    if (hasError && totalItems === 0) {
+      return 'Не удалось загрузить данные. Проверьте статус синхронизации и попробуйте обновить еще раз.';
+    }
+
+    if (totalItems === 0) {
+      return 'Нет данных. Добавьте новый предмет.';
+    }
+
+    return 'Ничего не найдено. Измените фильтры или добавьте новый предмет.';
+  };
   return (
     <section className="table-card" aria-label="Таблица предметов">
       <div className="table-heading">
@@ -15,7 +33,7 @@ export const ItemsTable = ({ items, onEdit, onDelete }: ItemsTableProps) => {
           <h2>Предметы</h2>
           <p>База цен и профита</p>
         </div>
-        <span>{items.length} найдено</span>
+        <span>{initialLoading ? 'Загрузка...' : `${items.length} найдено`}</span>
       </div>
 
       <div className="table-scroll">
@@ -39,7 +57,7 @@ export const ItemsTable = ({ items, onEdit, onDelete }: ItemsTableProps) => {
             {items.length === 0 ? (
               <tr>
                 <td className="empty-table" colSpan={11}>
-                  Ничего не найдено. Измените фильтры или добавьте новый предмет.
+                  {getEmptyMessage()}
                 </td>
               </tr>
             ) : (

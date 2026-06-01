@@ -3,9 +3,10 @@ import { SyncStatus } from './SyncStatus';
 interface HeaderProps {
   error: string | null;
   isAutoRefreshEnabled: boolean;
+  isRefreshing: boolean;
 }
 
-export const Header = ({ error, isAutoRefreshEnabled }: HeaderProps) => {
+export const Header = ({ error, isAutoRefreshEnabled, isRefreshing }: HeaderProps) => {
   return (
     <header className="app-header">
       <div>
@@ -23,7 +24,7 @@ export const Header = ({ error, isAutoRefreshEnabled }: HeaderProps) => {
           <span>Друг</span>
           <strong>Онлайн</strong>
         </div>
-        <SyncStatus error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} />
+        <SyncStatus error={error} isAutoRefreshEnabled={isAutoRefreshEnabled} isRefreshing={isRefreshing} />
       </div>
     </header>
   );

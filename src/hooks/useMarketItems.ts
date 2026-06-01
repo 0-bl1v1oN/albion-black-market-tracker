@@ -4,7 +4,11 @@ import type { ItemFormValues, MarketItem } from '../types/market';
 import { calculateProfit, calculateRoi } from '../utils/calculations';
 import { loadItems as loadLocalItems, saveItems as saveLocalItems } from '../utils/storage';
 
-const DEFAULT_POLLING_INTERVAL_MS = 5000;
+const DEFAULT_POLLING_INTERVAL_MS = 15000;
+
+type LoadItemsOptions = {
+  silent?: boolean;
+};
 
 const getPollingInterval = (): number => {
   const parsedInterval = Number(import.meta.env.VITE_POLLING_INTERVAL_MS);
@@ -35,58 +39,66 @@ export const useMarketItems = () => {
   );
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
 
-  const loadItems = useCallback(async () => {
-    if (!isRemoteConfigured) {
-      const localItems = loadLocalItems();
-      setItems(localItems);
-      setError('VITE_APPS_SCRIPT_URL не задан. Сейчас используется локальный fallback на моковых данных.');
-      setInitialLoading(false);
-      setIsRefreshing(false);
-      hasCompletedInitialLoad.current = true;
-      return localItems;
-    }
+  const loadItems = useCallback(
+    async ({ silent = false }: LoadItemsOptions = {}) => {
+      if (!isRemoteConfigured) {
+        const localItems = loadLocalItems();
+        setItems(localItems);
+        setError('VITE_APPS_SCRIPT_URL не задан. Сейчас используется локальный fallback на моковых данных.');
+        setInitialLoading(false);
+        setIsRefreshing(false);
+        hasCompletedInitialLoad.current = true;
+        return localItems;
+      }
 
     const isInitialRequest = !hasCompletedInitialLoad.current;
 
-    if (isInitialRequest) {
-      setInitialLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
-
-    try {
-      const loadedItems = await marketApi.listItems();
-      setItems(loadedItems);
-      setError(null);
-      return loadedItems;
-    } catch (loadError) {
-      const message = loadError instanceof Error ? loadError.message : 'Не удалось загрузить данные из Google Таблицы.';
-      setError(message);
-      throw loadError;
-    } finally {
       if (isInitialRequest) {
-        hasCompletedInitialLoad.current = true;
-        setInitialLoading(false);
-      } else {
-        setIsRefreshing(false);
+        setInitialLoading(true);
+      } else if (!silent) {
+        setIsRefreshing(true);
       }
-    }
-  }, [isRemoteConfigured]);
+
+      try {
+        const loadedItems = await marketApi.listItems();
+        setItems(loadedItems);
+        setError(null);
+        return loadedItems;
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : 'Не удалось загрузить данные из Google Таблицы.';
+        setError(message);
+        throw loadError;
+      } finally {
+        if (isInitialRequest) {
+          hasCompletedInitialLoad.current = true;
+          setInitialLoading(false);
+        } else if (!silent) {
+          setIsRefreshing(false);
+        }
+      }
+    },
+    [isRemoteConfigured],
+  );
 
   const createItem = useCallback(
     async (values: ItemFormValues) => {
       if (!isRemoteConfigured) {
         const createdItem = createLocalItemFromForm(values);
-        const nextItems = [createdItem, ...items];
-        setItems(nextItems);
-        saveLocalItems(nextItems);
-        await loadItems();
+        setItems((currentItems) => {
+          const nextItems = [createdItem, ...currentItems];
+          saveLocalItems(nextItems);
+          return nextItems;
+        });
+        void loadItems({ silent: true }).catch(() => undefined);
         return createdItem;
       }
 
       try {
-        const createdItem = await marketApi.createItem(values);
-        await loadItems();
+        const apiItem = await marketApi.createItem(values);
+        const createdItem = apiItem ?? createLocalItemFromForm(values);
+        setItems((currentItems) => [createdItem, ...currentItems]);
+        setError(null);
+        void loadItems({ silent: true }).catch(() => undefined);
         return createdItem;
       } catch (createError) {
         const message = createError instanceof Error ? createError.message : 'Не удалось добавить предмет.';
@@ -94,23 +106,28 @@ export const useMarketItems = () => {
         throw createError;
       }
     },
-    [isRemoteConfigured, items, loadItems],
+    [isRemoteConfigured, loadItems],
   );
 
   const updateItem = useCallback(
     async (id: string, values: ItemFormValues) => {
       if (!isRemoteConfigured) {
-        const nextItems = items.map((item) => (item.id === id ? createLocalItemFromForm(values, id) : item));
-        const updatedItem = nextItems.find((item) => item.id === id);
-        setItems(nextItems);
-        saveLocalItems(nextItems);
-        await loadItems();
-        return updatedItem ?? null;
+        const updatedItem = createLocalItemFromForm(values, id);
+        setItems((currentItems) => {
+          const nextItems = currentItems.map((item) => (item.id === id ? updatedItem : item));
+          saveLocalItems(nextItems);
+          return nextItems;
+        });
+        void loadItems({ silent: true }).catch(() => undefined);
+        return updatedItem;
       }
 
       try {
-        const updatedItem = await marketApi.updateItem({ ...values, id });
-        await loadItems();
+        const apiItem = await marketApi.updateItem({ ...values, id });
+        const updatedItem = apiItem ?? createLocalItemFromForm(values, id);
+        setItems((currentItems) => currentItems.map((item) => (item.id === id ? updatedItem : item)));
+        setError(null);
+        void loadItems({ silent: true }).catch(() => undefined);
         return updatedItem;
       } catch (updateError) {
         const message = updateError instanceof Error ? updateError.message : 'Не удалось обновить предмет.';
@@ -118,29 +135,33 @@ export const useMarketItems = () => {
         throw updateError;
       }
     },
-    [isRemoteConfigured, items, loadItems],
+    [isRemoteConfigured, loadItems],
   );
 
   const deleteItem = useCallback(
     async (id: string) => {
       if (!isRemoteConfigured) {
-        const nextItems = items.filter((item) => item.id !== id);
-        setItems(nextItems);
-        saveLocalItems(nextItems);
-        await loadItems();
+        setItems((currentItems) => {
+          const nextItems = currentItems.filter((item) => item.id !== id);
+          saveLocalItems(nextItems);
+          return nextItems;
+        });
+        void loadItems({ silent: true }).catch(() => undefined);
         return;
       }
 
       try {
         await marketApi.deleteItem(id);
-        await loadItems();
+        setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+        setError(null);
+        void loadItems({ silent: true }).catch(() => undefined);
       } catch (deleteError) {
         const message = deleteError instanceof Error ? deleteError.message : 'Не удалось удалить предмет.';
         setError(message);
         throw deleteError;
       }
     },
-    [isRemoteConfigured, items, loadItems],
+    [isRemoteConfigured, loadItems],
   );
 
   const toggleAutoRefresh = useCallback(() => {
@@ -148,7 +169,7 @@ export const useMarketItems = () => {
   }, []);
 
   useEffect(() => {
-    void loadItems().catch(() => undefined);
+    void loadItems({ silent: false }).catch(() => undefined);
   }, [loadItems]);
 
   useEffect(() => {
@@ -157,7 +178,7 @@ export const useMarketItems = () => {
     }
 
     const intervalId = window.setInterval(() => {
-      void loadItems().catch(() => undefined);
+      void loadItems({ silent: false }).catch(() => undefined);
     }, getPollingInterval());
 
     return () => window.clearInterval(intervalId);
