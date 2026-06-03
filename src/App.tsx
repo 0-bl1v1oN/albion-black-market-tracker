@@ -4,6 +4,9 @@ import { Header } from './components/Header';
 import { ItemModal } from './components/ItemModal';
 import { ItemsTable } from './components/ItemsTable';
 import { StatsCards } from './components/StatsCards';
+import { Tabs, type AppTab } from './components/Tabs';
+import { TripPage } from './components/TripPage';
+import { RunsHistory } from './components/RunsHistory';
 import { useMarketItems } from './hooks/useMarketItems';
 import type { CategoryFilter, EnchantFilter, ItemFormValues, MarketItem, SortOption, TierFilter } from './types/market';
 
@@ -33,6 +36,7 @@ function App() {
   const [enchantFilter, setEnchantFilter] = useState<EnchantFilter>('Все');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('Все');
   const [sortOption, setSortOption] = useState<SortOption>(defaultSortOption);
+  const [activeTab, setActiveTab] = useState<AppTab>('items');
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -130,37 +134,55 @@ function App() {
           {error}
         </div>
       )}
-      <StatsCards items={items} initialLoading={initialLoading} />
-      <Controls
-        search={search}
-        tierFilter={tierFilter}
-        enchantFilter={enchantFilter}
-        categoryFilter={categoryFilter}
-        sortOption={sortOption}
-        onSearchChange={setSearch}
-        onTierChange={setTierFilter}
-        onEnchantChange={setEnchantFilter}
-        onCategoryChange={setCategoryFilter}
-        onSortChange={setSortOption}
-        onResetFilters={handleResetFilters}
-        onAddNew={handleAddClick}
-        onRefresh={() => void loadItems({ silent: false }).catch(() => undefined)}
-        isAutoRefreshEnabled={isAutoRefreshEnabled}
-        onToggleAutoRefresh={toggleAutoRefresh}
-      />
+      <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {initialLoading && items.length === 0 && <div className="app-loading">Загружаем базу...</div>}
+      {activeTab === 'items' && (
+        <>
+          <StatsCards items={items} initialLoading={initialLoading} />
+          <Controls
+            search={search}
+            tierFilter={tierFilter}
+            enchantFilter={enchantFilter}
+            categoryFilter={categoryFilter}
+            sortOption={sortOption}
+            onSearchChange={setSearch}
+            onTierChange={setTierFilter}
+            onEnchantChange={setEnchantFilter}
+            onCategoryChange={setCategoryFilter}
+            onSortChange={setSortOption}
+            onResetFilters={handleResetFilters}
+            onAddNew={handleAddClick}
+            onRefresh={() => void loadItems({ silent: false }).catch(() => undefined)}
+            isAutoRefreshEnabled={isAutoRefreshEnabled}
+            onToggleAutoRefresh={toggleAutoRefresh}
+          />
 
-      <div className="workspace-grid">
-        <ItemsTable
-          items={visibleItems}
-          totalItems={items.length}
+          {initialLoading && items.length === 0 && <div className="app-loading">Загружаем базу...</div>}
+
+          <div className="workspace-grid">
+            <ItemsTable
+              items={visibleItems}
+              totalItems={items.length}
+              initialLoading={initialLoading}
+              hasError={Boolean(error)}
+              onEdit={handleEditClick}
+              onDelete={(itemId) => void handleDeleteItem(itemId)}
+            />
+          </div>
+        </>
+      )}
+
+      {activeTab === 'trip' && (
+        <TripPage
+          items={items}
           initialLoading={initialLoading}
           hasError={Boolean(error)}
-          onEdit={handleEditClick}
-          onDelete={(itemId) => void handleDeleteItem(itemId)}
+          isRemoteConfigured={isRemoteConfigured}
+          onRunCompleted={() => setActiveTab('history')}
         />
-      </div>
+      )}
+
+      {activeTab === 'history' && <RunsHistory isActive={activeTab === 'history'} />}
 
       <ItemModal
         isOpen={isModalOpen}

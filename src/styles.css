@@ -568,3 +568,157 @@ td small {
     margin-top: 12px;
   }
 }
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0;
+  border: 1px solid rgba(216, 173, 85, 0.18);
+  border-radius: 20px;
+  background: rgba(26, 29, 33, 0.72);
+  padding: 8px;
+}
+
+.tab-button {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  padding: 0 18px;
+  font-weight: 900;
+}
+
+.tab-button-active {
+  border-color: rgba(216, 173, 85, 0.38);
+  background: linear-gradient(135deg, rgba(216, 173, 85, 0.18), rgba(216, 173, 85, 0.06));
+  color: var(--gold-bright);
+}
+
+.app-success {
+  border-color: rgba(104, 211, 145, 0.32);
+  background: rgba(104, 211, 145, 0.09);
+  color: #bbf7d0;
+}
+
+.trip-page,
+.history-page {
+  display: grid;
+  gap: 18px;
+}
+
+.trip-controls {
+  grid-template-columns: minmax(200px, 1.3fr) repeat(3, minmax(100px, 0.5fr)) minmax(210px, 0.9fr) auto;
+  margin-bottom: 0;
+}
+
+.history-controls {
+  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 0.8fr) minmax(210px, 0.9fr) auto;
+  margin-bottom: 0;
+}
+
+.trip-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(480px, 0.95fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.trip-cart-card {
+  position: sticky;
+  top: 16px;
+}
+
+.trip-meta-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1fr);
+  gap: 12px;
+  padding: 14px 16px 0;
+}
+
+.trip-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 16px 0;
+}
+
+.details-totals {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.compact-stat {
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.compact-stat strong {
+  min-height: 0;
+  margin: 6px 0 0;
+  font-size: 1.1rem;
+}
+
+.compact-input {
+  min-width: 90px;
+  max-width: 120px;
+  padding: 8px 10px;
+}
+
+.cart-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 16px 18px;
+}
+
+.run-details-card {
+  margin-top: 4px;
+}
+
+.details-loading {
+  margin: 14px 16px;
+}
+
+@media (max-width: 1280px) {
+  .trip-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-cart-card {
+    position: static;
+  }
+}
+
+@media (max-width: 1180px) {
+  .trip-controls,
+  .history-controls,
+  .trip-totals,
+  .details-totals,
+  .trip-meta-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-controls .controls-actions,
+  .trip-controls .controls-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .tabs,
+  .cart-actions {
+    display: grid;
+  }
+
+  .tab-button {
+    width: 100%;
+  }
+
+  .trip-controls,
+  .history-controls,
+  .trip-totals,
+  .details-totals,
+  .trip-meta-form {
+    grid-template-columns: 1fr;
+  }
+}
