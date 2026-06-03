@@ -1,4 +1,5 @@
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, FocusEvent, FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import type { TripCartItem } from '../types/run';
 import { calculateProfit } from '../utils/calculations';
 import { formatPrice, formatRoi, getProfitClassName } from '../utils/format';
@@ -23,7 +24,25 @@ interface TripCartProps {
   onCompleteRun: () => void;
 }
 
-const getNumericValue = (event: ChangeEvent<HTMLInputElement>) => Number(event.target.value) || 0;
+type DraftCartInputs = Record<string, { quantity: string; buyPrice: string; sellPrice: string }>;
+type NumericField = 'quantity' | 'buyPrice' | 'sellPrice';
+
+const digitsOnlyPattern = /^\d*$/;
+
+const createDraftInputs = (cartItems: TripCartItem[]): DraftCartInputs =>
+  cartItems.reduce<DraftCartInputs>((drafts, item) => {
+    drafts[item.cartId] = {
+      quantity: String(item.quantity),
+      buyPrice: String(item.buyPrice),
+      sellPrice: String(item.sellPrice),
+    };
+
+    return drafts;
+  }, {});
+
+const selectInputValue = (event: FocusEvent<HTMLInputElement>) => {
+  event.currentTarget.select();
+};
 
 export const TripCart = ({
   cartItems,
@@ -38,9 +57,58 @@ export const TripCart = ({
   onClearCart,
   onCompleteRun,
 }: TripCartProps) => {
+  const [draftInputs, setDraftInputs] = useState<DraftCartInputs>(() => createDraftInputs(cartItems));
+
+  useEffect(() => {
+    setDraftInputs(createDraftInputs(cartItems));
+  }, [cartItems]);
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     onCompleteRun();
+  };
+
+  const handleNumericChange = (cartId: string, field: NumericField, event: ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.currentTarget;
+
+    if (!digitsOnlyPattern.test(value)) {
+      return;
+    }
+
+    setDraftInputs((currentDrafts) => ({
+      ...currentDrafts,
+      [cartId]: {
+        ...(currentDrafts[cartId] ?? { quantity: '', buyPrice: '', sellPrice: '' }),
+        [field]: value,
+      },
+    }));
+
+    if (value === '') {
+      return;
+    }
+
+    const numericValue = Number(value);
+
+    if (field === 'quantity' && numericValue < 1) {
+      return;
+    }
+
+    onUpdateItem(cartId, { [field]: numericValue });
+  };
+
+  const handleNumericBlur = (item: TripCartItem, field: NumericField) => {
+    const rawValue = draftInputs[item.cartId]?.[field] ?? '';
+    const fallbackValue = field === 'quantity' ? 1 : 0;
+    const parsedValue = rawValue === '' ? fallbackValue : Number(rawValue);
+    const normalizedValue = field === 'quantity' ? Math.max(1, Math.floor(parsedValue || fallbackValue)) : Math.max(0, Math.floor(parsedValue || 0));
+
+    setDraftInputs((currentDrafts) => ({
+      ...currentDrafts,
+      [item.cartId]: {
+        ...(currentDrafts[item.cartId] ?? { quantity: '', buyPrice: '', sellPrice: '' }),
+        [field]: String(normalizedValue),
+      },
+    }));
+    onUpdateItem(item.cartId, { [field]: normalizedValue });
   };
 
   return (
@@ -84,16 +152,16 @@ export const TripCart = ({
       </div>
 
       <div className="table-scroll">
-        <table>
+        <table className="trip-cart-table">
           <thead>
             <tr>
               <th>Предмет</th>
               <th>Кол-во</th>
-              <th>Закуп за шт.</th>
-              <th>Продажа за шт.</th>
-              <th>Профит за шт.</th>
-              <th>Итоговый профит</th>
-              <th>Действия</th>
+              <th>Закуп</th>
+              <th>Продажа</th>
+              <th>Профит</th>
+              <th>Итог</th>
+              <th aria-label="Убрать"></th>
             </tr>
           </thead>
           <tbody>
@@ -107,10 +175,15 @@ export const TripCart = ({
               cartItems.map((item) => {
                 const profitPerItem = calculateProfit(item.buyPrice, item.sellPrice);
                 const totalProfit = profitPerItem * item.quantity;
+                const draft = draftInputs[item.cartId] ?? {
+                  quantity: String(item.quantity),
+                  buyPrice: String(item.buyPrice),
+                  sellPrice: String(item.sellPrice),
+                };
 
                 return (
                   <tr key={item.cartId}>
-                    <td className="item-name-cell">
+                    <td className="item-name-cell" title={item.name}>
                       <strong>{item.name}</strong>
                       <small>
                         T{item.tier} {item.enchant === 0 ? '0' : `.${item.enchant}`} · {item.category}
@@ -118,32 +191,38 @@ export const TripCart = ({
                     </td>
                     <td>
                       <input
-                        className="compact-input"
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={item.quantity}
-                        onChange={(event) => onUpdateItem(item.cartId, { quantity: getNumericValue(event) })}
+                        className="compact-input quantity-input"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={draft.quantity}
+                        onFocus={selectInputValue}
+                        onChange={(event) => handleNumericChange(item.cartId, 'quantity', event)}
+                        onBlur={() => handleNumericBlur(item, 'quantity')}
                       />
                     </td>
                     <td>
                       <input
-                        className="compact-input"
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={item.buyPrice}
-                        onChange={(event) => onUpdateItem(item.cartId, { buyPrice: getNumericValue(event) })}
+                        className="compact-input price-input"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={draft.buyPrice}
+                        onFocus={selectInputValue}
+                        onChange={(event) => handleNumericChange(item.cartId, 'buyPrice', event)}
+                        onBlur={() => handleNumericBlur(item, 'buyPrice')}
                       />
                     </td>
                     <td>
                       <input
-                        className="compact-input"
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={item.sellPrice}
-                        onChange={(event) => onUpdateItem(item.cartId, { sellPrice: getNumericValue(event) })}
+                        className="compact-input price-input"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={draft.sellPrice}
+                        onFocus={selectInputValue}
+                        onChange={(event) => handleNumericChange(item.cartId, 'sellPrice', event)}
+                        onBlur={() => handleNumericBlur(item, 'sellPrice')}
                       />
                     </td>
                     <td className={getProfitClassName(profitPerItem)}>{formatPrice(profitPerItem)}</td>

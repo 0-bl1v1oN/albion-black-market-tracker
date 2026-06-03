@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { createRun } from '../api/runsApi';
 import { itemCategories } from './Controls';
 import { TripCart } from './TripCart';
+import { addCachedRun } from '../utils/storage';
 import { useTripCart } from '../hooks/useTripCart';
 import type { CategoryFilter, EnchantFilter, MarketItem, SortOption, TierFilter } from '../types/market';
 import { formatPrice, formatRoi, getProfitClassName } from '../utils/format';
@@ -86,11 +87,12 @@ export const TripPage = ({ items, initialLoading, hasError, isRemoteConfigured, 
     setMessage(null);
 
     try {
-      await createRun({
+      const createdRun = await createRun({
         createdBy: createdBy.trim() || 'Не указано',
         comment: comment.trim(),
         items: cartItems,
       });
+      addCachedRun(createdRun);
       clearCart();
       setComment('');
       setMessage('Ходка успешно сохранена. Корзина очищена.');
@@ -169,7 +171,7 @@ export const TripPage = ({ items, initialLoading, hasError, isRemoteConfigured, 
       </section>
 
       <div className="trip-layout">
-        <section className="table-card" aria-label="База предметов для ходки">
+        <section className="table-card trip-picker-card" aria-label="База предметов для ходки">
           <div className="table-heading">
             <div>
               <h2>Выбор предметов</h2>
@@ -178,7 +180,7 @@ export const TripPage = ({ items, initialLoading, hasError, isRemoteConfigured, 
             <span>{initialLoading ? 'Загрузка...' : `${visibleItems.length} найдено`}</span>
           </div>
           <div className="table-scroll">
-            <table>
+            <table className="trip-picker-table">
               <thead>
                 <tr>
                   <th>Название</th>
@@ -187,9 +189,9 @@ export const TripPage = ({ items, initialLoading, hasError, isRemoteConfigured, 
                   <th>Категория</th>
                   <th>Покупка</th>
                   <th>Продажа</th>
-                  <th>Профит за 1 шт</th>
+                  <th>Профит</th>
                   <th>ROI</th>
-                  <th>Действия</th>
+                  <th aria-label="Действие"></th>
                 </tr>
               </thead>
               <tbody>
@@ -200,7 +202,7 @@ export const TripPage = ({ items, initialLoading, hasError, isRemoteConfigured, 
                 ) : (
                   visibleItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="item-name-cell"><strong>{item.name}</strong></td>
+                      <td className="item-name-cell" title={item.name}><strong>{item.name}</strong></td>
                       <td>T{item.tier}</td>
                       <td>{item.enchant === 0 ? '0' : `.${item.enchant}`}</td>
                       <td>{item.category}</td>

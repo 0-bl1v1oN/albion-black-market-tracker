@@ -722,3 +722,93 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+.trip-picker-table,
+.trip-cart-table {
+  table-layout: fixed;
+  font-size: 0.88rem;
+}
+
+.trip-picker-table th,
+.trip-picker-table td,
+.trip-cart-table th,
+.trip-cart-table td {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.trip-picker-table th:nth-child(1) { width: auto; }
+.trip-picker-table th:nth-child(2) { width: 42px; }
+.trip-picker-table th:nth-child(3) { width: 54px; }
+.trip-picker-table th:nth-child(4) { width: 92px; }
+.trip-picker-table th:nth-child(5),
+.trip-picker-table th:nth-child(6),
+.trip-picker-table th:nth-child(7) { width: 78px; }
+.trip-picker-table th:nth-child(8) { width: 58px; }
+.trip-picker-table th:nth-child(9) { width: 68px; }
+
+.trip-cart-table th:nth-child(1) { width: auto; }
+.trip-cart-table th:nth-child(2) { width: 58px; }
+.trip-cart-table th:nth-child(3),
+.trip-cart-table th:nth-child(4) { width: 78px; }
+.trip-cart-table th:nth-child(5),
+.trip-cart-table th:nth-child(6) { width: 82px; }
+.trip-cart-table th:nth-child(7) { width: 58px; }
+
+.trip-picker-table .item-name-cell,
+.trip-cart-table .item-name-cell {
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-picker-table .item-name-cell strong,
+.trip-cart-table .item-name-cell strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-cart-table .item-name-cell small {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.trip-picker-table .table-actions,
+.trip-cart-table .table-actions {
+  gap: 0;
+}
+
+.trip-picker-table .table-actions button,
+.trip-cart-table .table-actions button {
+  font-size: 0.8rem;
+}
+
+.trip-cart-table .compact-input {
+  min-width: 0;
+  width: 100%;
+  padding: 6px 7px;
+}
+
+.trip-cart-table .quantity-input {
+  max-width: 42px;
+}
+
+.trip-cart-table .price-input {
+  max-width: 68px;
+}
+
+@media (min-width: 761px) {
+  .trip-picker-card .table-scroll,
+  .trip-cart-card .table-scroll {
+    overflow-x: visible;
+  }
+}
+
+@media (max-width: 760px) {
+  .trip-picker-table,
+  .trip-cart-table {
+    min-width: 760px;
+  }
+}
