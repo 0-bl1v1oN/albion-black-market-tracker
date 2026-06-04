@@ -619,28 +619,54 @@ td small {
 
 .trip-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(480px, 0.95fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+  gap: 24px;
   align-items: start;
+}
+
+.trip-picker-card,
+.trip-cart-card {
+  min-width: 0;
 }
 
 .trip-cart-card {
   position: sticky;
   top: 16px;
+  border-color: rgba(216, 173, 85, 0.32);
+  background: linear-gradient(145deg, rgba(34, 38, 44, 0.96), rgba(18, 20, 24, 0.98));
+}
+
+.trip-cart-heading {
+  align-items: start;
+  padding: 26px 28px 0;
+}
+
+.cart-clear-button {
+  min-height: 32px;
+  padding: 0 12px;
+  border-color: rgba(167, 160, 148, 0.32);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted);
+  font-size: 0.84rem;
+  white-space: nowrap;
 }
 
 .trip-meta-form {
   display: grid;
-  grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1fr);
-  gap: 12px;
-  padding: 14px 16px 0;
+  grid-template-columns: minmax(160px, 0.38fr) minmax(260px, 0.62fr);
+  gap: 14px;
+  padding: 20px 28px 0;
+}
+
+.trip-cart-scroll {
+  padding: 20px 28px 0;
 }
 
 .trip-totals {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
-  padding: 14px 16px 0;
+  padding: 22px 28px 0;
 }
 
 .details-totals {
@@ -648,14 +674,17 @@ td small {
 }
 
 .compact-stat {
+  border-color: rgba(216, 173, 85, 0.2);
   border-radius: 16px;
-  padding: 12px;
+  background: rgba(18, 20, 24, 0.72);
+  padding: 13px 12px;
 }
 
 .compact-stat strong {
   min-height: 0;
-  margin: 6px 0 0;
-  font-size: 1.1rem;
+  margin: 7px 0 0;
+  font-size: clamp(1rem, 1.2vw, 1.22rem);
+  line-height: 1.15;
 }
 
 .compact-input {
@@ -666,9 +695,15 @@ td small {
 
 .cart-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 0 16px 18px;
+  padding: 22px 28px 28px;
+}
+
+.cart-complete-button {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 16px;
+  font-size: 1.06rem;
+  box-shadow: 0 14px 36px rgba(216, 173, 85, 0.18);
 }
 
 .run-details-card {
@@ -677,6 +712,111 @@ td small {
 
 .details-loading {
   margin: 14px 16px;
+}
+
+.trip-picker-table,
+.trip-cart-table {
+  table-layout: fixed;
+  min-width: 0;
+  font-size: 0.84rem;
+}
+
+.trip-picker-table th,
+.trip-picker-table td,
+.trip-cart-table th,
+.trip-cart-table td {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.trip-picker-table td,
+.trip-cart-table td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.trip-picker-table th:nth-child(1) { width: auto; }
+.trip-picker-table th:nth-child(2) { width: 40px; }
+.trip-picker-table th:nth-child(3) { width: 48px; }
+.trip-picker-table th:nth-child(4) { width: 82px; }
+.trip-picker-table th:nth-child(5),
+.trip-picker-table th:nth-child(6),
+.trip-picker-table th:nth-child(7) { width: 72px; }
+.trip-picker-table th:nth-child(8) { width: 54px; }
+.trip-picker-table th:nth-child(9) { width: 66px; }
+
+.trip-cart-table {
+  font-size: 0.9rem;
+}
+
+.trip-cart-table th:nth-child(1) { width: auto; }
+.trip-cart-table th:nth-child(2) { width: 62px; }
+.trip-cart-table th:nth-child(3),
+.trip-cart-table th:nth-child(4) { width: 88px; }
+.trip-cart-table th:nth-child(5),
+.trip-cart-table th:nth-child(6) { width: 88px; }
+.trip-cart-table th:nth-child(7) { width: 62px; }
+
+.trip-picker-table .item-name-cell,
+.trip-cart-table .item-name-cell {
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-cart-table .item-name-cell {
+  white-space: normal;
+}
+
+.trip-picker-table .item-name-cell strong,
+.trip-cart-table .item-name-cell strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-cart-table .item-name-cell small {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.trip-picker-table .table-actions,
+.trip-cart-table .table-actions {
+  gap: 0;
+}
+
+.trip-picker-table .table-actions button,
+.trip-cart-table .table-actions button {
+  font-size: 0.8rem;
+}
+
+.trip-cart-table .table-actions button {
+  color: var(--red);
+}
+
+.trip-cart-table .compact-input {
+  min-width: 0;
+  width: 100%;
+  padding: 8px 8px;
+  text-align: right;
+}
+
+.trip-cart-table .quantity-input {
+  max-width: 50px;
+  text-align: center;
+}
+
+.trip-cart-table .price-input {
+  max-width: 78px;
+}
+
+@media (min-width: 761px) {
+  .trip-picker-card .table-scroll,
+  .trip-cart-card .table-scroll {
+    overflow-x: visible;
+  }
 }
 
 @media (max-width: 1280px) {
@@ -692,10 +832,13 @@ td small {
 @media (max-width: 1180px) {
   .trip-controls,
   .history-controls,
-  .trip-totals,
   .details-totals,
   .trip-meta-form {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .trip-totals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .history-controls .controls-actions,
@@ -721,94 +864,27 @@ td small {
   .trip-meta-form {
     grid-template-columns: 1fr;
   }
-}
-.trip-picker-table,
-.trip-cart-table {
-  table-layout: fixed;
-  font-size: 0.88rem;
-}
 
-.trip-picker-table th,
-.trip-picker-table td,
-.trip-cart-table th,
-.trip-cart-table td {
-  padding-left: 6px;
-  padding-right: 6px;
-}
-
-.trip-picker-table th:nth-child(1) { width: auto; }
-.trip-picker-table th:nth-child(2) { width: 42px; }
-.trip-picker-table th:nth-child(3) { width: 54px; }
-.trip-picker-table th:nth-child(4) { width: 92px; }
-.trip-picker-table th:nth-child(5),
-.trip-picker-table th:nth-child(6),
-.trip-picker-table th:nth-child(7) { width: 78px; }
-.trip-picker-table th:nth-child(8) { width: 58px; }
-.trip-picker-table th:nth-child(9) { width: 68px; }
-
-.trip-cart-table th:nth-child(1) { width: auto; }
-.trip-cart-table th:nth-child(2) { width: 58px; }
-.trip-cart-table th:nth-child(3),
-.trip-cart-table th:nth-child(4) { width: 78px; }
-.trip-cart-table th:nth-child(5),
-.trip-cart-table th:nth-child(6) { width: 82px; }
-.trip-cart-table th:nth-child(7) { width: 58px; }
-
-.trip-picker-table .item-name-cell,
-.trip-cart-table .item-name-cell {
-  min-width: 0;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.trip-picker-table .item-name-cell strong,
-.trip-cart-table .item-name-cell strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.trip-cart-table .item-name-cell small {
-  max-width: 100%;
-  white-space: nowrap;
-}
-
-.trip-picker-table .table-actions,
-.trip-cart-table .table-actions {
-  gap: 0;
-}
-
-.trip-picker-table .table-actions button,
-.trip-cart-table .table-actions button {
-  font-size: 0.8rem;
-}
-
-.trip-cart-table .compact-input {
-  min-width: 0;
-  width: 100%;
-  padding: 6px 7px;
-}
-
-.trip-cart-table .quantity-input {
-  max-width: 42px;
-}
-
-.trip-cart-table .price-input {
-  max-width: 68px;
-}
-
-@media (min-width: 761px) {
-  .trip-picker-card .table-scroll,
-  .trip-cart-card .table-scroll {
-    overflow-x: visible;
+  .trip-cart-heading {
+    display: grid;
+    gap: 14px;
+    padding: 22px 18px 0;
   }
-}
 
-@media (max-width: 760px) {
+  .cart-clear-button {
+    width: 100%;
+  }
+
+  .trip-meta-form,
+  .trip-cart-scroll,
+  .trip-totals,
+  .cart-actions {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
   .trip-picker-table,
   .trip-cart-table {
-    min-width: 760px;
+    min-width: 720px;
   }
 }

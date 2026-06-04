@@ -113,12 +113,14 @@ export const TripCart = ({
 
   return (
     <section className="table-card trip-cart-card" aria-label="Корзина текущей ходки">
-      <div className="table-heading">
+      <div className="table-heading trip-cart-heading">
         <div>
           <h2>Корзина ходки</h2>
-          <p>Данные сохраняются локально и отправляются только при завершении ходки</p>
+          <p>Добавленные предметы для текущей ходки</p>
         </div>
-        <span>{totals.totalItems} шт.</span>
+        <button className="button button-secondary cart-clear-button" type="button" onClick={onClearCart} disabled={cartItems.length === 0 || isSaving}>
+          Очистить корзину
+        </button>
       </div>
 
       <form className="trip-meta-form" onSubmit={handleSubmit}>
@@ -132,26 +134,7 @@ export const TripCart = ({
         </label>
       </form>
 
-      <div className="trip-totals">
-        <div className="stat-card compact-stat">
-          <span>Общий закуп</span>
-          <strong>{formatPrice(totals.totalBuy)}</strong>
-        </div>
-        <div className="stat-card compact-stat">
-          <span>Общая продажа</span>
-          <strong>{formatPrice(totals.totalSell)}</strong>
-        </div>
-        <div className="stat-card compact-stat">
-          <span>Общий профит</span>
-          <strong className={getProfitClassName(totals.totalProfit)}>{formatPrice(totals.totalProfit)}</strong>
-        </div>
-        <div className="stat-card compact-stat">
-          <span>ROI ходки</span>
-          <strong className={getProfitClassName(totals.roi)}>{formatRoi(totals.roi)}</strong>
-        </div>
-      </div>
-
-      <div className="table-scroll">
+      <div className="table-scroll trip-cart-scroll">
         <table className="trip-cart-table">
           <thead>
             <tr>
@@ -242,11 +225,31 @@ export const TripCart = ({
         </table>
       </div>
 
+      <div className="trip-totals" aria-label="Итоги корзины ходки">
+        <div className="stat-card compact-stat">
+          <span>Всего предметов</span>
+          <strong>{totals.totalItems}</strong>
+        </div>
+        <div className="stat-card compact-stat">
+          <span>Сумма закупа</span>
+          <strong>{formatPrice(totals.totalBuy)}</strong>
+        </div>
+        <div className="stat-card compact-stat">
+          <span>Сумма продажи</span>
+          <strong>{formatPrice(totals.totalSell)}</strong>
+        </div>
+        <div className="stat-card compact-stat">
+          <span>Профит за ходку</span>
+          <strong className={getProfitClassName(totals.totalProfit)}>{formatPrice(totals.totalProfit)}</strong>
+        </div>
+        <div className="stat-card compact-stat">
+          <span>ROI ходки</span>
+          <strong className={getProfitClassName(totals.roi)}>{formatRoi(totals.roi)}</strong>
+        </div>
+      </div>
+
       <div className="cart-actions">
-        <button className="button button-secondary" type="button" onClick={onClearCart} disabled={cartItems.length === 0 || isSaving}>
-          Очистить корзину
-        </button>
-        <button className="button button-primary" type="button" onClick={onCompleteRun} disabled={cartItems.length === 0 || isSaving}>
+        <button className="button button-primary cart-complete-button" type="button" onClick={onCompleteRun} disabled={cartItems.length === 0 || isSaving}>
           {isSaving ? 'Сохраняем...' : 'Завершить ходку'}
         </button>
       </div>
