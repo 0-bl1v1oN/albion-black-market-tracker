@@ -632,11 +632,15 @@ td small {
 .trip-cart-card {
   position: sticky;
   top: 16px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 220px);
   border-color: rgba(216, 173, 85, 0.32);
   background: linear-gradient(145deg, rgba(34, 38, 44, 0.96), rgba(18, 20, 24, 0.98));
 }
 
 .trip-cart-heading {
+  flex: 0 0 auto;
   align-items: start;
   padding: 26px 28px 0;
 }
@@ -653,16 +657,38 @@ td small {
 
 .trip-meta-form {
   display: grid;
+  flex: 0 0 auto;
   grid-template-columns: minmax(160px, 0.38fr) minmax(260px, 0.62fr);
   gap: 14px;
   padding: 20px 28px 0;
 }
 
 .trip-cart-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 20px 28px 0;
+  scrollbar-color: rgba(216, 173, 85, 0.42) rgba(18, 20, 24, 0.68);
+  scrollbar-width: thin;
+}
+
+.trip-cart-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.trip-cart-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(18, 20, 24, 0.68);
+}
+
+.trip-cart-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(216, 173, 85, 0.42);
 }
 
 .trip-totals {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
@@ -695,6 +721,7 @@ td small {
 
 .cart-actions {
   display: flex;
+  flex: 0 0 auto;
   padding: 22px 28px 28px;
 }
 
@@ -747,6 +774,13 @@ td small {
 
 .trip-cart-table {
   font-size: 0.9rem;
+}
+
+.trip-cart-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #16191e;
 }
 
 .trip-cart-table th:nth-child(1) { width: auto; }
@@ -813,9 +847,12 @@ td small {
 }
 
 @media (min-width: 761px) {
-  .trip-picker-card .table-scroll,
-  .trip-cart-card .table-scroll {
+  .trip-picker-card .table-scroll {
     overflow-x: visible;
+  }
+
+  .trip-cart-card .table-scroll {
+    overflow-x: hidden;
   }
 }
 
@@ -826,6 +863,7 @@ td small {
 
   .trip-cart-card {
     position: static;
+    max-height: calc(100vh - 160px);
   }
 }
 
@@ -883,6 +921,16 @@ td small {
     padding-right: 18px;
   }
 
+  .trip-cart-card {
+    display: block;
+    max-height: none;
+  }
+
+  .trip-cart-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  
   .trip-picker-table,
   .trip-cart-table {
     min-width: 720px;
